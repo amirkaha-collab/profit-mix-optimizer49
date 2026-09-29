@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      QA_BASE: https://rawcdn.githack.com/amirkaha-collab/profit-mix-optimizer49/7eeb87c60b41946e356bc8f269bef092ac3bd7c3
-      QA_URL: https://rawcdn.githack.com/amirkaha-collab/profit-mix-optimizer49/7eeb87c60b41946e356bc8f269bef092ac3bd7c3/qopt/c2a/ui/index.html
+      QA_BASE: https://cdn.statically.io/gh/amirkaha-collab/profit-mix-optimizer49@7eeb87c60b41946e356bc8f269bef092ac3bd7c3
+      QA_URL: https://cdn.statically.io/gh/amirkaha-collab/profit-mix-optimizer49@7eeb87c60b41946e356bc8f269bef092ac3bd7c3/qopt/c2a/ui/index.html
     steps:
       - name: Verify served byte identity and MIME
         shell: bash
