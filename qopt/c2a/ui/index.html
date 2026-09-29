@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>F8 — תכנון הכסף לפי המטרה שלך</title>
+  <link rel="stylesheet" href="./c2a.css">
+  <link rel="stylesheet" href="../../c2b/ui/c2b.css">
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="#" id="brandHome" aria-label="חזרה למסך בחירת היעד"><span>F8</span><strong>תכנון פיננסי למשפחה</strong></a>
+    <div class="top-actions"><button id="backTop" class="ghost hidden" type="button">חזרה</button><button id="newCaseTop" class="ghost" type="button">מקרה חדש</button></div>
+  </header>
+  <main>
+    <section id="goalScreen" class="screen active" aria-labelledby="goalQuestion">
+      <div class="goal-shell">
+        <div class="eyebrow">מתחילים בייעוד העתידי של הכסף</div>
+        <h1 id="goalQuestion">למה אתה מייעד את הסכום בעתיד?</h1>
+        <p class="lead">בחר את השימוש העיקרי שאתה רוצה לבחון.</p>
+        <div id="goalCards" class="goal-grid" role="group" aria-label="בחירת ייעוד עתידי לכסף">
+          <button class="goal-card" data-goal="CAPITAL" type="button"><span class="goal-icon" aria-hidden="true">₪</span><span><strong>למשוך כסכום חד פעמי בעתיד</strong><small>בדוק את הסכום החד־פעמי העתידי במסלול הקיים.</small></span></button>
+          <button class="goal-card" data-goal="INCOME" type="button"><span class="goal-icon" aria-hidden="true">↻</span><span><strong>למשוך מהכסף קצבה או אנונה חודשית</strong><small>בדוק חלופות להכנסה חודשית מההון במסלול הקיים.</small></span></button>
+          <button class="goal-card" data-goal="INHERITANCE" type="button"><span class="goal-icon" aria-hidden="true">♡</span><span><strong>הורשה</strong><small>תכנן את ההון כדי למקסם את הערך למשפחה במסגרת ה־Beta הנתמך.</small></span></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="routeScreen" class="screen" aria-live="polite">
+      <div class="route-head">
+        <div><div id="routeEyebrow" class="eyebrow"></div><h1 id="routeTitle"></h1><p id="routeSubtitle" class="lead"></p></div>
+        <div class="route-actions"><button id="backRoute" class="secondary" type="button">חזרה</button><button id="newCaseRoute" class="secondary" type="button">מקרה חדש</button></div>
+      </div>
+      <div id="routeHost" class="route-host"></div>
+    </section>
+  </main>
+</div>
+<script type="module" src="./c2a.js"></script>
+</body>
+</html>
