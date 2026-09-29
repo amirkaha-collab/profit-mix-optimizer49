@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>F8 — תכנון ערך למשפחה</title>
+  <link rel="stylesheet" href="./candidate1.css">
+  <script type="importmap">{"imports":{"node:crypto":"./node-crypto-browser-shim.js"}}</script>
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand-wrap"><div class="brand">F8</div><div><strong>תכנון ערך למשפחה</strong><small>Professional Simulation Beta</small></div></div>
+    <div class="top-actions"><button id="editCaseTop" class="ghost hidden" type="button">עריכת נתונים</button><button id="newCaseTop" class="ghost" type="button">מקרה חדש</button></div>
+  </header>
+
+  <main>
+    <section id="intakeScreen" class="screen active">
+      <div class="intake-layout">
+        <aside class="step-rail" aria-label="שלבי התהליך">
+          <div class="eyebrow">מקרה חדש</div>
+          <h1>בונים מקרה לקוח</h1>
+          <p>מזינים עובדות בלבד. המנוע בוחר את התוכנית.</p>
+          <nav id="stepNav" class="step-nav">
+            <button data-step-nav="1" class="active"><b>1</b><span>אתם והמשפחה</span></button>
+            <button data-step-nav="2"><b>2</b><span>ההון</span></button>
+            <button data-step-nav="3"><b>3</b><span>זכויות והרשאות</span></button>
+            <button data-step-nav="4"><b>4</b><span>בדיקה וחישוב</span></button>
+          </nav>
+          <div class="guardrail"><strong>מה לא מזינים?</strong><span>לא בוחרים מראש אסטרטגיה או סכומי הקצאה. המנוע עושה זאת.</span></div>
+        </aside>
+
+        <section class="intake-card">
+          <div id="staleNotice" class="stale hidden">הנתונים השתנו. התוכנית הקודמת אינה תקפה עד לחישוב מחדש.</div>
+
+          <div class="step-panel active" data-step="1">
+            <span class="pill">שלב 1 מתוך 4</span><h2>אתם והמשפחה</h2><p class="lead">נשאל רק על עובדות שמשפיעות על החישוב הנתמך ב־Beta.</p>
+            <div class="form-grid two">
+              <label><span>מועד מצב הנתונים</span><input id="asOfDate" type="date"><em data-error-for="asOfDate"></em></label>
+              <label><span>גיל העמית</span><input id="memberAge" inputmode="numeric" type="number" min="0" placeholder="לדוגמה 60"><em data-error-for="memberAge"></em></label>
+              <label><span>מין העמית</span><select id="memberSex"><option value="male">זכר</option><option value="female">נקבה</option></select></label>
+              <label class="check-row full"><input id="spouseRelevant" type="checkbox"><span><strong>יש בן/בת זוג רלוונטי/ת לתכנון</strong><small>אם לא — לא נבקש פרטי בן/בת זוג.</small></span></label>
+              <label class="spouse-field hidden"><span>גיל בן/בת הזוג</span><input id="spouseAge" type="number" min="0" placeholder="לדוגמה 58"><em data-error-for="spouseAge"></em></label>
+              <label class="spouse-field hidden"><span>מין בן/בת הזוג</span><select id="spouseSex"><option value="female">נקבה</option><option value="male">זכר</option></select></label>
+            </div>
+          </div>
+
+          <div class="step-panel" data-step="2">
+            <span class="pill">שלב 2 מתוך 4</span><h2>ההון שממנו מתכננים</h2><p class="lead">Candidate 1 תומך במקור תכנון יחיד מסוג פוליסת חיסכון.</p>
+            <div class="readonly-fact"><span>מוצר נתמך</span><strong>פוליסת חיסכון</strong><small>מוצר שאינו נתמך נעצר לפני החישוב — ללא קירוב חלופי.</small></div>
+            <div class="form-grid two">
+              <label><span>שווי נוכחי</span><input id="balance" type="number" min="0" placeholder="₪"><em data-error-for="balance"></em></label>
+              <label><span>דמי ניהול שנתיים</span><input id="annualFee" type="number" min="0" max="0.99" step="0.001" placeholder="לדוגמה 0.006"><em data-error-for="annualFee"></em></label>
+              <label><span>בסיס מס נומינלי</span><input id="basisNominal" type="number" min="0" placeholder="₪"><em data-error-for="basisNominal"></em></label>
+              <label><span>בסיס מס צמוד</span><input id="basisIndexed" type="number" min="0" placeholder="₪"><em data-error-for="basisIndexed"></em></label>
+              <label class="full"><span>צורך חודשי נטו שהמסלול צריך לשרת</span><input id="requiredNetMonthly" type="number" min="0" placeholder="0 אם אין צורך"><em data-error-for="requiredNetMonthly"></em><small>אפס חייב להיות מוזן במפורש; שדה ריק אינו אפס.</small></label>
+            </div>
+          </div>
+
+          <div class="step-panel" data-step="3">
+            <span class="pill">שלב 3 מתוך 4</span><h2>זכויות, חוזים והרשאות</h2><p class="lead">הרשאה מאפשרת למנוע לבדוק אפשרות — היא לא בוחרת אותה.</p>
+            <label class="check-row contract-toggle"><input id="rotationEnabled" type="checkbox"><span><strong>קיים חוזה קצבה / רוטציה נתמך</strong><small>אם קיים, נדרש מידע חוזי מלא כדי לא להמציא סמנטיקה.</small></span></label>
+            <div id="rotationFields" class="contract-box hidden">
+              <div class="form-grid two">
+                <label><span>מזהה חוזה</span><input id="rotationContractRef"><em data-error-for="rotationContractRef"></em></label>
+                <label><span>הון בקרן</span><input id="pensionFundCapital" type="number" min="0"></label>
+                <label><span>מקדם קצבה</span><input id="rotationAnnuityFactor" type="number" min="0.01"></label>
+                <label><span>גיל תחילת המסלול</span><input id="commencementAge" type="number" min="0"></label>
+                <label><span>קצבה חודשית ברוטו</span><input id="memberMonthlyGross" type="number" min="0"></label>
+                <label><span>רכיב חודשי שניתן לרוטציה</span><input id="replaceableMonthlyGross" type="number" min="0"></label>
+                <label><span>שיעור קצבת שאיר</span><input id="rotationSpouseShare" type="number" min="0" max="1" step="0.01"></label>
+                <label><span>שיעור הבטחה</span><input id="rotationGuaranteeShare" type="number" min="0" max="1" step="0.01"></label>
+              </div>
+            </div>
+            <div class="permission-grid">
+              <label class="permission-card"><input id="qualifyingPermission" type="checkbox"><span><strong>לאפשר למנוע לבדוק הפקדה לרובד המזכה</strong><small>המנוע יחליט אם להשתמש באפשרות ובאיזה סכום.</small></span></label>
+              <label class="permission-card"><input id="optionalPermission" type="checkbox"><span><strong>לאפשר למנוע לבדוק המרה אופציונלית לקצבה</strong><small>החוזה והסכום הזוכה ייבחרו על ידי המנוע בלבד.</small></span></label>
+            </div>
+          </div>
+
+          <div class="step-panel" data-step="4">
+            <span class="pill">שלב 4 מתוך 4</span><h2>בדיקה לפני חישוב</h2><p class="lead">וודאו שהעובדות נכונות. הנחות המערכת מוצגות בנפרד ואינן ניתנות לעריכה.</p>
+            <div class="review-grid">
+              <article><h3>עובדות שהוזנו</h3><div id="reviewFacts"></div></article>
+              <article class="system-card"><h3>הנחות מערכת</h3><div id="reviewAuthority"></div></article>
+            </div>
+            <div id="validationSummary" class="validation-summary"></div>
+          </div>
+
+          <div class="intake-actions"><button id="backButton" class="secondary" type="button">חזרה</button><button id="nextButton" type="button">המשך</button><button id="calculateButton" class="primary hidden" type="button">חשב תוכנית</button></div>
+          <div id="calcStatus" class="calc-status" aria-live="polite"></div>
+        </section>
+      </div>
+      <section id="qaPanel" class="qa-panel hidden"><strong>QA presets</strong><button data-preset="A_SIMPLE">A</button><button data-preset="B_ROTATION_Q">B</button><button data-preset="C_POSITIVE_q">C</button><button data-preset="D_SURVIVOR_GUARANTEE">D</button><button data-preset="E_q_ALLOWED_q_ZERO">E</button></section>
+    </section>
+
+    <section id="resultsScreen" class="screen">
+      <div class="results-head"><div><span class="eyebrow">התוכנית שנבחרה</span><h1>זו התוכנית המומלצת</h1><p>הערך הצפוי לבחירת התוכנית נשאר נפרד מתרחיש ה־What-if.</p></div><button id="editCaseButton" class="secondary" type="button">עריכת נתונים</button></div>
+      <section id="recommendationRoot"></section>
+      <section id="actionPlanRoot"></section>
+      <section id="dynamicRoot"></section>
+    </section>
+  </main>
+</div>
+<script type="module" src="./candidate1.js"></script>
+</body>
+</html>

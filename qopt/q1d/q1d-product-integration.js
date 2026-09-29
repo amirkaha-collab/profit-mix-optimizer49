@@ -1,0 +1,32 @@
+import {intakeToCommittedSelectedPlan,blankQ1DUserCase,Q1D_USER_CASE_SCHEMA} from './q1d-canonical-input-bridge.js';
+import {runQ1CProductScenario,ORDERING_UNRESOLVED_USER_MESSAGE} from '../q1c/q1c-product-integration.js';
+import {DECISION_EPS} from '../../methodology/shared/numerical-contract.js';
+
+const freeze=x=>{if(x&&typeof x==='object'&&!Object.isFrozen(x)){for(const v of Object.values(x))freeze(v);Object.freeze(x)}return x};
+const num=v=>typeof v==='number'&&Number.isFinite(v)?v:null;
+const strategyLabel={ROTATION:'רוטציה / מהלך קצבתי',QUALIFYING:'הפקדה מתוכננת לרובד המזכה',OPTIONAL_ANNUITIZATION:'המרת חלק מההון לקצבה',RESIDUAL:'השארת יתרה במסלול ההוני'};
+const actionLabel={ROTATION:'בצע/י את מהלך הרוטציה שנבחר',QUALIFYING:'העבר/י את הסכום לרובד המזכה במועד שנבחר',OPTIONAL_ANNUITIZATION:'המר/י את החלק שנבחר לקצבה',RESIDUAL:'השאר/י את היתרה במסלול ההוני'};
+const destinationLabel={ROTATION:'מסלול הקצבה שנבחר',QUALIFYING:'הרובד המזכה',OPTIONAL_ANNUITIZATION:'זכות הקצבה שנבחרה',RESIDUAL:'המסלול ההוני הקיים'};
+const nextStepLabel={ROTATION:'לאחר מכן הרכיב ממשיך לפי מסלול הקצבה שנבחר בתוכנית.',QUALIFYING:'לאחר מכן הסכום ממשיך ברובד המזכה בהתאם לתוכנית שנבחרה.',OPTIONAL_ANNUITIZATION:'לאחר מכן נוצרת זכות הקצבה והתקבולים משולמים לפי לוח התשלומים החוזי שנבחר.',RESIDUAL:'לאחר מכן היתרה ממשיכה במסלול ההוני שנבחר.'};
+function strategy(plan){return freeze(Object.entries(plan.selectedStrategy?.allocationByType??{}).filter(([,v])=>Number(v)>DECISION_EPS).map(([type,amount])=>({type,label:strategyLabel[type]??'רכיב בתוכנית',amount:Number(amount)})))}
+function sourceText(a){return a.actionType==='QUALIFYING'?'מההון הזמין בפוליסת החיסכון':a.actionType==='OPTIONAL_ANNUITIZATION'?'מההון שנבחר להמרה לקצבה':a.actionType==='ROTATION'?'מההון הזמין בפוליסת החיסכון':'מהיתרה שנשארת במסלול ההוני'}
+function actionPlan(plan){return freeze((plan.economicActions??[]).map(a=>({actionId:a.actionId,type:a.actionType,what:actionLabel[a.actionType]??'בצע/י את הפעולה שנבחרה',amount:num(a.netAmount)??num(a.grossAmount)??num(a.amount),grossAmount:num(a.grossAmount),tax:num(a.tax),source:sourceText(a),destination:destinationLabel[a.actionType]??'היעד שנבחר בתוכנית',then:nextStepLabel[a.actionType]??'לאחר מכן הפעולה ממשיכה בהתאם לתוכנית שנבחרה.',date:a.date??null,executionStatus:a.executionStatus??null,stopCondition:a.stopCondition??null})))}
+function q1cContext(opt){const c=opt.canonicalCase,p=opt.planProjection;return freeze({schemaVersion:'F8_Q1C_PRODUCT_CONTEXT_V1',productVersion:'F8_PROFESSIONAL_SIMULATION_BETA_USER_REVIEW_CANDIDATE_1',fixtureId:c.caseId,profile:{label:`מקרה ${c.caseId}`,summary:'התוכנית נבחרה אוטומטית מנתוני הלקוח באמצעות המנוע הקנוני.'},q1b:opt.q1bContext,planProjection:p,strategy:strategy(p),actionPlan:actionPlan(p),externalEvidenceBacklog:32,committedPlanHash:opt.committedPlanHash})}
+
+export function startQ1DBlankCase(){return blankQ1DUserCase()}
+export function calculateQ1DUserCase(raw,{authorityProfileId='F8_BETA_AUTHORITY_GENERAL_V1'}={}){const intake=intakeToCommittedSelectedPlan(raw,{authorityProfileId});if(intake.status!=='OPTIMIZED')return freeze({schemaVersion:'F8_Q1D_PRODUCT_RESULT_V1',status:'VALIDATION_FAILED',validation:intake.validation,canonicalCase:null,optimized:null,q1cContext:null,optimizerCalls:0,fallback:intake.fallback});const ctx=q1cContext(intake.optimized);return freeze({schemaVersion:'F8_Q1D_PRODUCT_RESULT_V1',status:'READY',validation:intake.validation,canonicalCase:intake.canonicalCase,canonicalCaseHash:intake.canonicalCaseHash,optimized:intake.optimized,q1cContext:ctx,planProjection:intake.optimized.planProjection,committedSelectedPlan:intake.optimized.committedSelectedPlan,committedPlanHash:intake.optimized.committedPlanHash,noHandcraftedPlan:intake.optimized.handcraftedSelectedPlan===false,noLegacyFallback:intake.optimized.legacyEconomicFallback===false,optimizerInvocation:intake.optimized.optimizerInvoked,optimizerCalls:intake.optimized.optimizerCallCount,fallback:intake.fallback})}
+export function runQ1DScenario(product,spec){if(product?.status!=='READY'||product?.q1cContext?.schemaVersion!=='F8_Q1C_PRODUCT_CONTEXT_V1')throw new Error('Q1D_PRODUCT: calculated product required');return runQ1CProductScenario(product.q1cContext,spec)}
+
+const source=(id,balance,basis,fee)=>({assetType:'SAVINGS_POLICY',balance,basisNominal:basis,basisIndexed:basis,annualFee:fee,providerRef:`beta-source-${id}`,productRef:`policy-${id}`,contractRef:`policy-contract-${id}`});
+const family={member:{age:60,sex:'male'},spouse:{relevant:true,age:58,sex:'female'}};
+const rotation=(id,{fund=1000,factor=220,age=61,gross=0,replaceable=0,spouse=.0,guarantee=0}={})=>({enabled:true,providerRef:`beta-pension-${id}`,contractRef:`pension-contract-${id}`,pensionFundCapital:fund,annuityFactor:factor,commencementAge:age,memberMonthlyGross:gross,replaceableMonthlyGross:replaceable,spouseShare:spouse,guaranteeShare:guarantee});
+const raw=(caseId,asOfDate,planningSource,rotationContract,permissions)=>({schemaVersion:Q1D_USER_CASE_SCHEMA,caseId,asOfDate,currency:'ILS',member:{...family.member},spouse:{...family.spouse},planningSource,service:{requiredNetMonthly:0},rotationContract,permissions});
+
+export function q1DAcceptanceCases(){return freeze({
+  A_SIMPLE:{authorityProfileId:'F8_BETA_AUTHORITY_A_SIMPLE_V1',rawInput:raw('INTAKE_A_SIMPLE','2026-01-01',source('a',1000000,650000,.006),rotation('a',{fund:1500000,factor:235,age:72,gross:5000,replaceable:2500,spouse:.6}),{qualifying:'DISALLOW',optionalAnnuitization:'DISALLOW'})},
+  B_ROTATION_Q:{authorityProfileId:'F8_BETA_AUTHORITY_B_ROTATION_Q_V1',rawInput:raw('INTAKE_B_ROTATION_Q','2026-01-01',source('b',1000000,950000,.008),rotation('b',{fund:1800000,factor:220,age:72,gross:6000,replaceable:3200,spouse:.6}),{qualifying:'ALLOW',optionalAnnuitization:'DISALLOW'})},
+  C_POSITIVE_q:{authorityProfileId:'F8_BETA_AUTHORITY_C_POSITIVE_Q_V1',rawInput:raw('INTAKE_C_POSITIVE_Q','2029-01-01',source('c',1000,1000,0),rotation('c'),{qualifying:'ALLOW',optionalAnnuitization:'ALLOW'})},
+  D_SURVIVOR_GUARANTEE:{authorityProfileId:'F8_BETA_AUTHORITY_D_SURVIVOR_GUARANTEE_V1',rawInput:raw('INTAKE_D_SURVIVOR_GUARANTEE','2029-01-01',source('d',1000,1000,0),{enabled:false},{qualifying:'DISALLOW',optionalAnnuitization:'ALLOW'})},
+  E_q_ALLOWED_q_ZERO:{authorityProfileId:'F8_BETA_AUTHORITY_E_Q_ZERO_V1',rawInput:raw('INTAKE_E_Q_ZERO','2029-01-01',source('e',1000,1000,0),rotation('e'),{qualifying:'ALLOW',optionalAnnuitization:'ALLOW'})}
+})}
+export {ORDERING_UNRESOLVED_USER_MESSAGE};
